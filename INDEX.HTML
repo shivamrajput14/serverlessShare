@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serverless Share</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236c63ff'/%3E%3Crect x='9' y='15' width='14' height='10' rx='2.5' fill='white'/%3E%3Cpath d='M11 15v-4a5 5 0 0 1 10 0v4' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='20' r='1.5' fill='%236c63ff'/%3E%3C/svg%3E">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-hover: rgba(255, 255, 255, 0.15);
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(108, 99, 255, 0.25);
+      --text: #f0eeff;
+      --text-muted: #8884aa;
+      --text-dim: #4a4870;
+      --success: #22c55e;
+      --error: #ef4444;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2.5rem;
+      justify-content: center;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: var(--accent2);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(108, 99, 255, 0.5), transparent);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 1.75rem;
+    }
+
+    /* Drop Zone */
+    #dropArea {
+      border: 1.5px dashed var(--border-hover);
+      border-radius: 16px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: var(--surface2);
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+
+    #dropArea:hover,
+    #dropArea.drag-over {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.06);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    #dropArea input[type="file"] {
+      display: none;
+    }
+
+    .drop-icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(108, 99, 255, 0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      transition: transform 0.2s ease;
+    }
+
+    #dropArea:hover .drop-icon {
+      transform: translateY(-3px);
+    }
+
+    .drop-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--accent2);
+    }
+
+    .drop-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .drop-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .drop-sub span {
+      color: var(--accent2);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .drop-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    #fileList {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(108, 99, 255, 0.08);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    .file-item.error {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .file-item-icon {
+      width: 30px;
+      height: 30px;
+      background: rgba(108, 99, 255, 0.15);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-item-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--accent2);
+    }
+
+    .file-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-item-name {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-item-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .file-item-status {
+      font-size: 11px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .file-item-status.done {
+      color: var(--success);
+    }
+
+    .file-item-status.fail {
+      color: var(--error);
+    }
+
+    .file-item-status.pending {
+      color: var(--text-muted);
+    }
+
+    .file-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 3px;
+      border-radius: 5px;
+      transition: color 0.2s;
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .file-remove:hover {
+      color: var(--error);
+    }
+
+    .file-remove svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+    }
+
+    .result-file-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .result-file-name {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .result-link-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .result-link-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result-copy-btn {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+    }
+
+    .result-copy-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.08);
+    }
+
+    .result-copy-btn svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+    }
+
+    .file-selected {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: rgba(108, 99, 255, 0.08);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 1rem;
+    }
+
+    .file-selected.show {
+      display: flex;
+    }
+
+    .file-icon {
+      width: 34px;
+      height: 34px;
+      background: rgba(108, 99, 255, 0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent2);
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .clear-file {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.2s;
+      display: flex;
+    }
+
+    .clear-file:hover {
+      color: var(--error);
+    }
+
+    .clear-file svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+    }
+
+    /* Upload Button */
+    #uploadBtn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.2px;
+    }
+
+    #uploadBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background 0.2s;
+    }
+
+    #uploadBtn:hover::before {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #uploadBtn:active {
+      transform: scale(0.98);
+    }
+
+    #uploadBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-inner svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+    }
+
+    /* Progress */
+    #progressContainer {
+      display: none;
+      margin-top: 1.25rem;
+    }
+
+    #progressContainer.show {
+      display: block;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    #progressPercent {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent2);
+    }
+
+    .progress-track {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width 0.2s ease;
+    }
+
+    /* Messages */
+    .msg-box {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 1.25rem;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .msg-box.show {
+      display: flex;
+    }
+
+    .msg-box svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    #successMsg {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+
+    #errorMsg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--error);
+    }
+
+    /* Result */
+    #result {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    #result.show {
+      display: block;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .result-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 0.6rem;
+      font-weight: 500;
+    }
+
+    .link-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    #shareLink {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: text;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.08);
+    }
+
+    .icon-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+      border: 1px solid;
+    }
+
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+    }
+
+    .btn-copy {
+      background: rgba(108, 99, 255, 0.1);
+      border-color: rgba(108, 99, 255, 0.3);
+      color: var(--accent2);
+    }
+
+    .btn-copy:hover {
+      background: rgba(108, 99, 255, 0.18);
+      border-color: var(--accent);
+    }
+
+    .btn-open {
+      background: rgba(167, 139, 250, 0.1);
+      border-color: rgba(167, 139, 250, 0.3);
+      color: var(--accent2);
+    }
+
+    .btn-open:hover {
+      background: rgba(167, 139, 250, 0.18);
+      border-color: var(--accent2);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.75rem;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner.show {
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Copy toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="starfield"></canvas>
+
+  <div class="wrapper">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+          <polyline points="13 2 13 9 20 9" />
+        </svg>
+      </div>
+      <div class="logo-text">Serverless<span>Share</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Upload files</div>
+      <div class="card-sub">End-to-end encrypted. Only the link holder can open your files.</div>
+
+      <!-- Drop Zone -->
+      <div id="dropArea">
+        <input type="file" id="fileInput"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav"
+          multiple />
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16" />
+            <line x1="12" y1="12" x2="12" y2="21" />
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+          </svg>
+        </div>
+        <div class="drop-title">Drop files here</div>
+        <div class="drop-sub">or <span>browse to upload</span></div>
+        <div class="drop-hint">Docs, images & videos · Max 50 MB each · Multiple files supported</div>
+
+        <div id="fileList"></div>
+      </div>
+
+      <!-- Upload Button -->
+      <button id="uploadBtn" onclick="uploadFile()">
+        <div class="btn-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16" />
+            <line x1="12" y1="12" x2="12" y2="21" />
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+          </svg>
+          <span id="btnText">Upload Files</span>
+          <div class="spinner" id="spinner"></div>
+        </div>
+      </button>
+
+      <!-- Progress -->
+      <div id="progressContainer">
+        <div class="progress-header">
+          <span class="progress-label">Uploading...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="msg-box" id="successMsg">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span id="successText"></span>
+      </div>
+
+      <div class="msg-box" id="errorMsg">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span id="errorText"></span>
+      </div>
+
+      <!-- Results -->
+      <div id="result">
+        <div class="divider"></div>
+        <div class="result-label">Share links</div>
+        <div id="resultList"></div>
+        <button class="action-btn btn-copy" style="width:100%;margin-top:0.75rem;" onclick="copyAllLinks()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="width:14px;height:14px;stroke:currentColor">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy All Links
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">AES-256-GCM encrypted in your browser · key never leaves your device</div>
+  </div>
+
+  <div class="toast" id="toast">Link copied to clipboard</div>
+
+  <script>
+    const API_BASE = "https://i7bujd8zbd.execute-api.us-east-1.amazonaws.com/fileShare";
+
+    const dropArea = document.getElementById("dropArea");
+    const fileInput = document.getElementById("fileInput");
+    const fileList = document.getElementById("fileList");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const btnText = document.getElementById("btnText");
+    const spinner = document.getElementById("spinner");
+
+    let selectedFiles = []; // array of File objects
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
+    // ── File list UI 
+
+    function renderFileList() {
+      fileList.innerHTML = "";
+      selectedFiles.forEach((file, i) => {
+        const item = document.createElement("div");
+        item.className = "file-item";
+        item.id = `file-item-${i}`;
+        item.innerHTML = `
+      <div class="file-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+          <polyline points="13 2 13 9 20 9"/>
+        </svg>
+      </div>
+      <div class="file-item-info">
+        <div class="file-item-name">${file.name}</div>
+        <div class="file-item-meta">${formatSize(file.size)}</div>
+      </div>
+      <span class="file-item-status pending" id="status-${i}">Pending</span>
+      <button class="file-remove" onclick="removeFile(${i})" title="Remove">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>`;
+        fileList.appendChild(item);
+      });
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      renderFileList();
+    }
+
+    function setFileStatus(index, status, text) {
+      const el = document.getElementById(`status-${index}`);
+      if (!el) return;
+      el.className = `file-item-status ${status}`;
+      el.textContent = text;
+      if (status === "fail") {
+        const item = document.getElementById(`file-item-${index}`);
+        if (item) item.classList.add("error");
+      }
+    }
+
+    async function addFiles(newFiles) {
+      hideMessages();
+      for (const file of newFiles) {
+        const err = await validateFile(file);
+        if (err) { showError(`${file.name}: ${err}`); continue; }
+        if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+          selectedFiles.push(file);
+        }
+      }
+      renderFileList();
+    }
+
+    // ── Drop / input events 
+
+    dropArea.addEventListener("click", (e) => {
+      if (!e.target.closest(".file-remove")) fileInput.click();
+    });
+
+    dropArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropArea.classList.add("drag-over");
+    });
+
+    dropArea.addEventListener("dragleave", () => dropArea.classList.remove("drag-over"));
+
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("drag-over");
+      if (e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]);
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) addFiles([...fileInput.files]);
+      fileInput.value = "";
+    });
+
+    // ── Messages 
+
+    function showSuccess(text) {
+      document.getElementById("successText").textContent = text;
+      document.getElementById("successMsg").classList.add("show");
+    }
+
+    function showError(text) {
+      document.getElementById("errorText").textContent = text;
+      document.getElementById("errorMsg").classList.add("show");
+    }
+
+    function hideMessages() {
+      document.getElementById("successMsg").classList.remove("show");
+      document.getElementById("errorMsg").classList.remove("show");
+    }
+
+    function setLoading(on) {
+      uploadBtn.disabled = on;
+      spinner.classList.toggle("show", on);
+      btnText.textContent = on ? "Uploading..." : "Upload Files";
+    }
+
+    // ─Validation
+
+    const MAX_SIZE_BYTES = 50 * 1024 * 1024;
+
+    const ALLOWED_EXTENSIONS = new Set([
+      "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "rtf", "odt", "ods", "odp",
+      "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "tiff", "ico",
+      "mp4", "mov", "avi", "mkv", "webm", "m4v",
+      "mp3", "wav", "aac", "ogg", "flac",
+    ]);
+
+    const ALLOWED_MIME_PREFIXES = [
+      "image/", "video/", "audio/",
+      "application/pdf", "application/msword",
+      "application/vnd.openxmlformats", "application/vnd.ms-",
+      "application/vnd.oasis", "text/",
+    ];
+
+    const BLOCKED_SIGNATURES = [
+      { offset: 0, bytes: [0x4D, 0x5A] },
+      { offset: 0, bytes: [0x7F, 0x45, 0x4C, 0x46] },
+      { offset: 0, bytes: [0xCA, 0xFE, 0xBA, 0xBE] },
+      { offset: 0, bytes: [0x23, 0x21] },
+    ];
+
+    async function validateFile(file) {
+      if (file.size > MAX_SIZE_BYTES)
+        return `File too large. Max 50 MB (yours is ${formatSize(file.size)}).`;
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.has(ext))
+        return `".${ext}" files are not allowed.`;
+      const mimeOk = ALLOWED_MIME_PREFIXES.some(p => file.type.startsWith(p));
+      if (file.type && !mimeOk) return `File type "${file.type}" is not allowed.`;
+      const header = await file.slice(0, 8).arrayBuffer();
+      const bytes = new Uint8Array(header);
+      for (const sig of BLOCKED_SIGNATURES) {
+        if (sig.bytes.every((b, i) => bytes[sig.offset + i] === b))
+          return "This file type is blocked for security reasons.";
+      }
+      return null;
+    }
+
+    //  Encryption
+
+    async function generateKey() {
+      return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    }
+
+    async function exportKeyBase64(key) {
+      const raw = await crypto.subtle.exportKey("raw", key);
+      return btoa(String.fromCharCode(...new Uint8Array(raw)));
+    }
+
+    async function importKeyBase64(b64) {
+      const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["decrypt"]);
+    }
+
+    async function encryptFile(file) {
+      const key = await generateKey();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const plaintext = await file.arrayBuffer();
+      const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+      const combined = new Uint8Array(12 + ciphertext.byteLength);
+      combined.set(iv, 0);
+      combined.set(new Uint8Array(ciphertext), 12);
+      const keyB64 = await exportKeyBase64(key);
+      return { encryptedBlob: new Blob([combined], { type: "application/octet-stream" }), keyB64 };
+    }
+
+    async function decryptBlob(encryptedArrayBuffer, keyB64) {
+      const key = await importKeyBase64(keyB64);
+      const data = new Uint8Array(encryptedArrayBuffer);
+      const iv = data.slice(0, 12);
+      const ciphertext = data.slice(12);
+      return crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+    }
+
+    // Upload single file — returns share URL or throws 
+
+    async function uploadSingleFile(file, index) {
+      setFileStatus(index, "pending", "Encrypting…");
+      const { encryptedBlob, keyB64 } = await encryptFile(file);
+
+      setFileStatus(index, "pending", "Uploading…");
+      const res = await fetch(`${API_BASE}/upload-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name + ".enc",
+          fileType: "application/octet-stream",
+          fileSize: file.size,
+        })
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", data.uploadUrl);
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setFileStatus(index, "pending", `${pct}%`);
+          }
+        };
+        xhr.onload = resolve;
+        xhr.onerror = reject;
+        xhr.send(encryptedBlob);
+      });
+
+      const saveRes = await fetch(`${API_BASE}/save-file`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name + ".enc", key: data.key })
+      });
+
+      if (!saveRes.ok) throw new Error("Failed to save file metadata");
+      const saveData = await saveRes.json();
+
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      return `${baseUrl}#decrypt:${saveData.fileId}:${encodeURIComponent(file.name)}:${keyB64}`;
+    }
+
+    // Upload all files 
+
+    const generatedLinks = [];
+
+    async function uploadFile() {
+      hideMessages();
+
+      if (selectedFiles.length === 0) {
+        showError("Please select at least one file.");
+        return;
+      }
+
+      setLoading(true);
+      generatedLinks.length = 0;
+
+      const resultList = document.getElementById("resultList");
+      resultList.innerHTML = "";
+      document.getElementById("result").classList.remove("show");
+
+      let successCount = 0;
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        try {
+          const shareUrl = await uploadSingleFile(selectedFiles[i], i);
+          generatedLinks.push({ name: selectedFiles[i].name, url: shareUrl });
+          setFileStatus(i, "done", "Done");
+
+          // Add result row
+          const row = document.createElement("div");
+          row.className = "result-file-item";
+          row.innerHTML = `
+        <div class="result-file-name">${selectedFiles[i].name}</div>
+        <div class="result-link-row">
+          <input class="result-link-input" readonly value="${shareUrl}" />
+          <button class="result-copy-btn" onclick="copySingleLink(this, '${shareUrl}')" title="Copy link">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+        </div>`;
+          resultList.appendChild(row);
+          successCount++;
+        } catch (err) {
+          setFileStatus(i, "fail", "Failed");
+          console.error(`Failed to upload ${selectedFiles[i].name}:`, err);
+        }
+      }
+
+      if (successCount > 0) {
+        document.getElementById("result").classList.add("show");
+        showSuccess(`${successCount} of ${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} uploaded successfully!`);
+      } else {
+        showError("All uploads failed. Please try again.");
+      }
+
+      setLoading(false);
+    }
+
+    //  Copy helpers ─
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    function copySingleLink(btn, url) {
+      navigator.clipboard.writeText(url).then(() => showToast("Link copied!"));
+    }
+
+    function copyAllLinks() {
+      if (!generatedLinks.length) return;
+      const text = generatedLinks.map((l, i) => `${i + 1}. ${l.name}\n${l.url}`).join("\n\n");
+      navigator.clipboard.writeText(text).then(() => showToast(`${generatedLinks.length} links copied!`));
+    }
+
+    // ── Decrypt page ──
+
+    async function handleDecryptFromHash() {
+      const hash = window.location.hash.slice(1);
+      if (!hash.startsWith("decrypt:")) return;
+
+      const [, fileId, encodedName, keyB64] = hash.split(":");
+      if (!fileId || !keyB64) return;
+
+      const originalName = decodeURIComponent(encodedName || "file");
+
+      document.querySelector(".card-title").textContent = "Decrypting file…";
+      document.querySelector(".card-sub").textContent = "Your file is being decrypted locally in your browser.";
+      document.getElementById("dropArea").style.display = "none";
+      document.getElementById("uploadBtn").style.display = "none";
+
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const progressPercent = document.getElementById("progressPercent");
+      progressContainer.classList.add("show");
+      progressBar.style.width = "30%";
+      progressPercent.textContent = "Fetching…";
+
+      try {
+        const resp = await fetch(`${API_BASE}/download/${fileId}`);
+        if (!resp.ok) throw new Error("Download failed");
+
+        progressBar.style.width = "60%";
+        progressPercent.textContent = "Decrypting…";
+
+        const encryptedBuffer = await resp.arrayBuffer();
+        const decryptedBuffer = await decryptBlob(encryptedBuffer, keyB64);
+
+        progressBar.style.width = "100%";
+        progressPercent.textContent = "Done";
+
+        const blob = new Blob([decryptedBuffer]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = originalName;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        document.querySelector(".card-title").textContent = "File decrypted!";
+        document.querySelector(".card-sub").textContent = `${originalName} has been saved to your downloads.`;
+        showSuccess(`${originalName} downloaded successfully.`);
+
+      } catch (err) {
+        showError("Decryption failed. The link may be invalid or expired.");
+        console.error(err);
+      }
+    }
+
+    handleDecryptFromHash();
+  </script>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("starfield");
+      const ctx = canvas.getContext("2d");
+      let W, H, stars, shooters;
+
+      const STAR_COUNT = 280;
+      const LAYER_SPEEDS = [0.008, 0.02, 0.045];
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function initStars() {
+        stars = Array.from({ length: STAR_COUNT }, () => {
+          const layer = Math.floor(rand(0, 3));
+          return {
+            x: rand(0, W), y: rand(0, H),
+            r: rand(0.2, layer === 2 ? 1.6 : layer === 1 ? 1.1 : 0.6),
+            alpha: rand(0.25, 1),
+            twinkleSpeed: rand(0.003, 0.012),
+            twinklePhase: rand(0, Math.PI * 2),
+            speed: LAYER_SPEEDS[layer],
+            layer,
+          };
+        });
+      }
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        initStars();
+        shooters = [];
+      }
+
+      let frame = 0;
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        frame++;
+
+        if (frame % 180 === 0 && shooters.length < 3) {
+          shooters.push({
+            x: rand(0, W * 0.7), y: rand(0, H * 0.4),
+            len: rand(80, 160), speed: rand(8, 14),
+            alpha: 1, angle: rand(0.3, 0.55),
+          });
+        }
+
+        stars.forEach(s => {
+          s.twinklePhase += s.twinkleSpeed;
+          const a = s.alpha * (0.5 + 0.5 * Math.sin(s.twinklePhase));
+          s.y -= s.speed;
+          if (s.y < 0) { s.y = H; s.x = rand(0, W); }
+
+          const tints = ["255,255,255", "200,190,255", "180,210,255", "255,220,200"];
+          const tint = s.layer === 2 ? tints[Math.floor(rand(0, tints.length))] : "255,255,255";
+
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${tint},${a})`;
+          ctx.fill();
+
+          if (s.r > 1.0 && a > 0.7) {
+            const glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 4);
+            glow.addColorStop(0, `rgba(${tint},${a * 0.4})`);
+            glow.addColorStop(1, `rgba(${tint},0)`);
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r * 4, 0, Math.PI * 2);
+            ctx.fillStyle = glow;
+            ctx.fill();
+          }
+        });
+
+        shooters = shooters.filter(s => s.alpha > 0.02);
+        shooters.forEach(s => {
+          const dx = Math.cos(s.angle) * s.len;
+          const dy = Math.sin(s.angle) * s.len;
+          const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx, s.y - dy);
+          grad.addColorStop(0, `rgba(200,190,255,${s.alpha})`);
+          grad.addColorStop(0.4, `rgba(255,255,255,${s.alpha * 0.6})`);
+          grad.addColorStop(1, `rgba(255,255,255,0)`);
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(s.x - dx, s.y - dy);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          s.x += Math.cos(s.angle) * s.speed;
+          s.y += Math.sin(s.angle) * s.speed;
+          s.alpha -= 0.018;
+        });
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      draw();
+    })();
+  </script>
+</body>
+
+</html>
