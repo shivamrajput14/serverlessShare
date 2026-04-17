@@ -719,7 +719,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
       margin-bottom: 10px;
     }
@@ -727,23 +727,28 @@
     .footer-contact-link {
       display: flex;
       align-items: center;
-      gap: 7px;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
       text-decoration: none;
-      font-size: 12px;
       color: var(--text-muted);
-      transition: color 0.2s ease;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      transition: all 0.2s ease;
     }
 
-    .footer-contact-link:hover { color: var(--accent2); }
+    .footer-contact-link:hover {
+      color: var(--accent2);
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+    }
 
     .footer-contact-link svg {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       flex-shrink: 0;
-      opacity: 0.75;
     }
-
-    .footer-contact-link:hover svg { opacity: 1; }
 
     .footer-bottom {
       font-size: 11px;
@@ -911,26 +916,36 @@
       <div style="margin-top:2rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07);">
         <div class="footer-top">Designed &amp; Developed by <span>Shivam Rajput</span></div>
         <div class="footer-contacts">
-          <a class="footer-contact-link" href="https://www.instagram.com/_shivammrajput?igsh=a2diODMybzJtemNt" target="_blank">
+          <!-- Instagram -->
+          <a class="footer-contact-link" href="https://www.instagram.com/_shivammrajput?igsh=a2diODMybzJtemNt" target="_blank" title="Instagram">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
               <circle cx="12" cy="12" r="4"/>
               <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
             </svg>
-            _shivammrajput
           </a>
-          <a class="footer-contact-link" href="mailto:shivamrajput0414@gmail.com">
+          <!-- Email -->
+          <a class="footer-contact-link" href="mailto:shivamrajput0414@gmail.com" title="Email">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2"/>
               <polyline points="2,4 12,13 22,4"/>
             </svg>
-            shivamrajput0414@gmail.com
           </a>
-          <a class="footer-contact-link" href="tel:+917091054299">
+          <!-- Phone -->
+          <a class="footer-contact-link" href="tel:+917091054299" title="Phone">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
-            +91 7091054299
+          </a>
+          <!-- LinkedIn -->
+          <a class="footer-contact-link" href="https://www.linkedin.com/in/shivam-kumar-537b553a2?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" title="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="4" ry="4"/>
+              <line x1="8" y1="11" x2="8" y2="16"/>
+              <line x1="8" y1="8" x2="8" y2="8.5"/>
+              <line x1="12" y1="16" x2="12" y2="11"/>
+              <path d="M12 13a2 2 0 0 1 4 0v3"/>
+            </svg>
           </a>
         </div>
         <div class="footer-bottom">© 2026 Shivam Rajput · All Rights Reserved</div>
